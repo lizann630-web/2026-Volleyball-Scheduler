@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JO Volleyball Practice Schedule Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .season-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .info-box {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        select, input, button {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+        }
+        
+        .export-btn {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .export-btn:hover {
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .danger-btn:hover {
+            box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+        }
+        
+        .team-setup {
+            background: #e8f5e8;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .team-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+        }
+        
+        .team-card input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .team-card select {
+            width: 100%;
+        }
+        
+        .tab-container {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: white;
+            border-bottom-color: #007bff;
+            color: #007bff;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .schedule-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 1200px;
+        }
+        
+        .schedule-table th {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-right: 1px solid #6c757d;
+        }
+        
+        .schedule-table td {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            background: white;
+            position: relative;
+        }
+        
+        .schedule-table tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        
+        .date-header {
+            background: #e9ecef !important;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .time-slot {
+            background: #fff3cd !important;
+            font-weight: bold;
+            color: #856404;
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            min-width: 80px;
+        }
+        
+        .practice-cell {
+            min-width: 100px;
+            height: 60px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .practice-cell:hover {
+            background: #e3f2fd !important;
+        }
+        
+        .practice-assigned {
+            background: #d4edda !important;
+            color: #155724;
+            font-weight: bold;
+        }
+        
+        .practice-conflict {
+            background: #f8d7da !important;
+            color: #721c24;
+        }
+        
+        .team-color-1 { background: #ffebee !important; color: #c62828; }
+        .team-color-2 { background: #f3e5f5 !important; color: #7b1fa2; }
+        .team-color-3 { background: #e8f5e9 !important; color: #2e7d32; }
+        .team-color-4 { background: #e3f2fd !important; color: #1565c0; }
+        .team-color-5 { background: #fff3e0 !important; color: #ef6c00; }
+        .team-color-6 { background: #fce4ec !important; color: #ad1457; }
+        .team-color-7 { background: #f1f8e9 !important; color: #558b2f; }
+        .team-color-8 { background: #e0f2f1 !important; color: #00695c; }
+        .team-color-9 { background: #fff8e1 !important; color: #ff8f00; }
+        .team-color-10 { background: #e8eaf6 !important; color: #3f51b5; }
+        .team-color-11 { background: #fafafa !important; color: #424242; }
+        .team-color-12 { background: #f9fbe7 !important; color: #827717; }
+        .team-color-13 { background: #ede7f6 !important; color: #512da8; }
+        .team-color-14 { background: #e0f7fa !important; color: #00838f; }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .summary-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .summary-card h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        @media (max-width: 768px) {
+            .season-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                justify-content: space-between;
+            }
+            
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-table {
+                font-size: 11px;
+            }
+            
+            .schedule-table th, 
+            .schedule-table td {
+                padding: 6px 4px;
+            }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏐 JO Volleyball Practice Schedule Manager</h1>
+            <div class="season-info">
+                <div class="info-box">
+                    <strong>Season:</strong> January 4 - April 19, 2026
+                </div>
+                <div class="info-box">
+                    <strong>Total Weeks:</strong> <span id="total-weeks">16</span>
+                </div>
+                <div class="info-box">
+                    <strong>Active Teams:</strong> <span id="active-teams">0</span>
+                </div>
+                <div class="info-box">
+                    <strong>Courts Available:</strong> <span id="courts-available">Main Gym 1-3 + Auxiliary</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="courts-input">Courts (3-9 PM):</label>
+                <input type="number" id="courts-input" min="1" max="6" value="4" readonly>
+            </div>
+            
+            <div class="control-group">
+                <label for="facility-name">Facility:</label>
+                <input type="text" id="facility-name" placeholder="Enter facility name" value="NL-S High School">
+            </div>
+            
+            <div class="control-group">
+                <button id="generate-schedule-btn">🔄 Generate Schedule</button>
+                <button id="auto-assign-btn" class="export-btn">🎯 Auto Assign</button>
+                <button id="export-schedule-btn" class="export-btn">📊 Export</button>
+                <button id="clear-schedule-btn" class="danger-btn">🗑️ Clear All</button>
+            </div>
+        </div>
+        
+        <div class="team-setup">
+            <h2>⚙️ Team Configuration</h2>
+            <p>Configure your teams below. Each team will be assigned a unique color for easy identification in the schedule.</p>
+            
+            <div class="team-grid" id="team-grid">
+                <!-- Team cards will be dynamically generated -->
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <button id="add-team-btn">➕ Add Team</button>
+                <button id="load-default-btn" class="export-btn">📋 Load Default Teams</button>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <button class="tab active" id="sunday-tab">📅 Sunday Schedule</button>
+            <button class="tab" id="weeknight-tab">🌙 Weeknight Schedule</button>
+            <button class="tab" id="calendar-tab">📆 Calendar View</button>
+            <button class="tab" id="summary-tab">📊 Team Summary</button>
+        </div>
+        
+        <div id="sunday-schedule" class="tab-content active">
+            <h2>Sunday Practice Schedule (1:00 PM - 9:00 PM)</h2>
+            <div class="controls" style="background: #e3f2fd; margin-bottom: 20px; padding: 15px;">
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                    <div class="info-box" style="background: #fff; padding: 10px; border-radius: 6px;">
+                        <strong>1:00-3:00 PM:</strong> Auxiliary Court Only
+                    </div>
+                    <div class="info-box" style="background: #fff; padding: 10px; border-radius: 6px;">
+                        <strong>3:00-9:00 PM:</strong> All Courts (Main Gym 1, 2, 3 + Auxiliary)
+                    </div>
+                    <div class="info-box" style="background: #fff; padding: 10px; border-radius: 6px;">
+                        <strong>Practice Length:</strong> 2 Hours Each
+                    </div>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d4edda;"></div>
+                    <span>Assigned Practice</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f8d7da;"></div>
+                    <span>Conflict/Overlap</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff3cd;"></div>
+                    <span>Available Slot</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffe6e6;"></div>
+                    <span>Limited Availability (Auxiliary Only)</span>
+                </div>
+            </div>
+            
+            <div class="schedule-container">
+                <table class="schedule-table" id="sunday-table">
+                    <thead id="sunday-header">
+                        <!-- Dynamic header will be generated -->
+                    </thead>
+                    <tbody id="sunday-body">
+                        <!-- Dynamic schedule will be generated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="weeknight-schedule" class="tab-content">
+            <h2>Weeknight Practice Schedule (6:00 PM - 9:00 PM)</h2>
+            <div class="controls" style="background: #fff3cd; margin-bottom: 20px;">
+                <div class="control-group">
+                    <label for="weeknight-day">Practice Day:</label>
+                    <select id="weeknight-day">
+                        <option value="tuesday">Tuesday</option>
+                        <option value="wednesday" selected>Wednesday</option>
+                        <option value="thursday">Thursday</option>
+                    </select>
+                </div>
+                <div class="info-box" style="background: #fff; padding: 10px; border-radius: 6px; margin-left: 20px;">
+                    <strong>Available:</strong> All Courts (Main Gym 1, 2, 3 + Auxiliary) | <strong>Practice Length:</strong> 2 Hours
+                </div>
+            </div>
+            
+            <div class="schedule-container">
+                <table class="schedule-table" id="weeknight-table">
+                    <thead id="weeknight-header">
+                        <!-- Dynamic header will be generated -->
+                    </thead>
+                    <tbody id="weeknight-body">
+                        <!-- Dynamic schedule will be generated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="calendar-view" class="tab-content">
+            <h2>📆 Monthly Calendar View</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="calendar-month">Month:</label>
+                    <select id="calendar-month">
+                        <option value="2026-01">January 2026</option>
+                        <option value="2026-02">February 2026</option>
+                        <option value="2026-03">March 2026</option>
+                        <option value="2026-04">April 2026</option>
+                    </select>
+                </div>
+            </div>
+            <div id="calendar-container">
+                <!-- Calendar will be generated here -->
+            </div>
+        </div>
+        
+        <div id="team-summary" class="tab-content">
+            <div class="summary-section">
+                <h2>📊 Team Practice Summary</h2>
+                <div class="summary-grid" id="summary-grid">
+                    <!-- Summary cards will be generated -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Practice Assignment Modal -->
+    <div id="practice-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Assign Practice</h3>
+                <span class="close" id="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modal-team">Team:</label>
+                    <select id="modal-team">
+                        <!-- Teams will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modal-date">Date:</label>
+                    <input type="text" id="modal-date" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="modal-time">Time Slot:</label>
+                    <input type="text" id="modal-time" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="modal-court">Court:</label>
+                    <select id="modal-court">
+                        <!-- Courts will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modal-notes">Notes:</label>
+                    <textarea id="modal-notes" placeholder="Optional practice notes..."></textarea>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button id="cancel-modal-btn" style="background: #6c757d; margin-right: 10px;">Cancel</button>
+                    <button id="save-practice-btn">Save Practice</button>
+                    <button id="remove-practice-btn" class="danger-btn" style="margin-left: 10px;">Remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables - immediately available
+        var teams = [];
+        var sundayDates = [];
+        var weeknightDates = [];
+        var practiceAssignments = {};
+        var currentModalData = {};
+        
+        // Court names
+        var courtNames = {
+            1: 'Main Gym 1',
+            2: 'Main Gym 2', 
+            3: 'Main Gym 3',
+            4: 'Auxiliary'
+        };
+        
+        // Court availability by time slot
+        var sundayCourtAvailability = {
+            '1:00-3:00 PM': ['Auxiliary'], // Only Auxiliary court available
+            '3:00-5:00 PM': ['Main Gym 1', 'Main Gym 2', 'Main Gym 3', 'Auxiliary'], // All courts
+            '5:00-7:00 PM': ['Main Gym 1', 'Main Gym 2', 'Main Gym 3', 'Auxiliary'], // All courts
+            '7:00-9:00 PM': ['Main Gym 1', 'Main Gym 2', 'Main Gym 3', 'Auxiliary']  // All courts
+        };
+        
+        var weeknightCourtAvailability = {
+            '6:00-8:00 PM': ['Main Gym 1', 'Main Gym 2', 'Main Gym 3', 'Auxiliary'],
+            '7:00-9:00 PM': ['Main Gym 1', 'Main Gym 2', 'Main Gym 3', 'Auxiliary']
+        };
+        
+        // Time slots
+        var sundayTimeSlots = [
+            '1:00-3:00 PM',
+            '3:00-5:00 PM', 
+            '5:00-7:00 PM',
+            '7:00-9:00 PM'
+        ];
+        
+        var weeknightTimeSlots = [
+            '6:00-8:00 PM',
+            '7:00-9:00 PM'
+        ];
+        
+        // GLOBAL FUNCTIONS - Now properly defined as regular functions
+        function addTeam() {
+            console.log('addTeam function called - START');
+            try {
+                var newId = teams.length > 0 ? Math.max.apply(Math, teams.map(function(t) { return t.id; })) + 1 : 1;
+                var newTeam = {
+                    id: newId,
+                    name: 'Team ' + newId,
+                    ageGroup: '14U',
+                    coach: 'Coach Name',
+                    active: true
+                };
+                console.log('About to add team:', newTeam);
+                teams.push(newTeam);
+                console.log('Team added, teams array now has', teams.length, 'teams');
+                
+                renderTeamGrid();
+                updateActiveTeamsCount();
+                console.log('addTeam function completed successfully');
+            } catch (error) {
+                console.error('Error in addTeam:', error);
+                alert('Error adding team: ' + error.message);
+            }
+        }
+        
+        function removeTeam(teamId) {
+            console.log('removeTeam called for team ID:', teamId);
+            try {
+                if (confirm('Are you sure you want to remove this team?')) {
+                    teams = teams.filter(function(t) { return t.id !== teamId; });
+                    // Remove any practice assignments for this team
+                    Object.keys(practiceAssignments).forEach(function(key) {
+                        if (practiceAssignments[key].teamId === teamId) {
+                            delete practiceAssignments[key];
+                        }
+                    });
+                    renderTeamGrid();
+                    updateActiveTeamsCount();
+                    generateSchedule();
+                }
+            } catch (error) {
+                console.error('Error removing team:', error);
+                alert('Error removing team: ' + error.message);
+            }
+        }
+        
+        function updateTeam(teamId, field, value) {
+            console.log('updateTeam called:', teamId, field, value);
+            try {
+                var team = teams.find(function(t) { return t.id === teamId; });
+                if (team) {
+                    team[field] = value;
+                    updateActiveTeamsCount();
+                }
+            } catch (error) {
+                console.error('Error updating team:', error);
+            }
+        }
+        
+        function loadDefaultTeams() {
+            console.log('loadDefaultTeams called');
+            try {
+                teams = [
+                    { id: 1, name: '10U Lightning', ageGroup: '10U', coach: 'Coach Johnson', active: true },
+                    { id: 2, name: '10U Thunder', ageGroup: '10U', coach: 'Coach Smith', active: true },
+                    { id: 3, name: '12U Storm', ageGroup: '12U', coach: 'Coach Davis', active: true },
+                    { id: 4, name: '12U Blaze', ageGroup: '12U', coach: 'Coach Wilson', active: true },
+                    { id: 5, name: '12U Fury', ageGroup: '12U', coach: 'Coach Brown', active: true },
+                    { id: 6, name: '14U Elite', ageGroup: '14U', coach: 'Coach Taylor', active: true },
+                    { id: 7, name: '14U Power', ageGroup: '14U', coach: 'Coach Garcia', active: true },
+                    { id: 8, name: '14U Impact', ageGroup: '14U', coach: 'Coach Martinez', active: true },
+                    { id: 9, name: '16U Voltage', ageGroup: '16U', coach: 'Coach Anderson', active: true },
+                    { id: 10, name: '16U Dynasty', ageGroup: '16U', coach: 'Coach Thomas', active: true },
+                    { id: 11, name: '17U Titans', ageGroup: '17U', coach: 'Coach Jackson', active: true },
+                    { id: 12, name: '17U Phoenix', ageGroup: '17U', coach: 'Coach White', active: true }
+                ];
+                
+                console.log('Default teams loaded:', teams.length, 'teams');
+                renderTeamGrid();
+                updateActiveTeamsCount();
+            } catch (error) {
+                console.error('Error loading default teams:', error);
+            }
+        }
+        
+        function generateSchedule() {
+            console.log('generateSchedule called');
+            try {
+                generateWeeknightDates();
+                generateSundaySchedule();
+                generateWeeknightSchedule();
+                generateCalendarView();
+                generateTeamSummary();
+            } catch (error) {
+                console.error('Error generating schedule:', error);
+            }
+        }
+        
+        function clearSchedule() {
+            console.log('clearSchedule called');
+            if (confirm('Are you sure you want to clear all practice assignments?')) {
+                practiceAssignments = {};
+                generateSchedule();
+            }
+        }
+        
+        function autoAssignPractices() {
+            console.log('autoAssignPractices called');
+            alert('Auto-assign feature coming soon!');
+        }
+        
+        function exportSchedule() {
+            console.log('exportSchedule called');
+            alert('Export feature coming soon!');
+        }
+        
+        function showTab(tabName) {
+            console.log('showTab called with:', tabName);
+            try {
+                // Hide all tab contents
+                var tabContents = document.querySelectorAll('.tab-content');
+                for (var i = 0; i < tabContents.length; i++) {
+                    tabContents[i].classList.remove('active');
+                }
+                
+                // Remove active class from all tabs
+                var tabs = document.querySelectorAll('.tab');
+                for (var i = 0; i < tabs.length; i++) {
+                    tabs[i].classList.remove('active');
+                }
+                
+                // Show selected tab content
+                var targetTab = document.getElementById(tabName);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+                
+                // Add active class to clicked tab
+                if (event && event.target) {
+                    event.target.classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error showing tab:', error);
+            }
+        }
+        
+        function updateActiveTeamsCount() {
+            try {
+                var activeCount = teams.filter(function(t) { return t.active; }).length;
+                var element = document.getElementById('active-teams');
+                if (element) {
+                    element.textContent = activeCount;
+                    console.log('Updated active teams count to:', activeCount);
+                }
+            } catch (error) {
+                console.error('Error updating active teams count:', error);
+            }
+        }
+        
+        function renderTeamGrid() {
+            try {
+                var grid = document.getElementById('team-grid');
+                if (!grid) {
+                    console.error('Team grid element not found');
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                
+                teams.forEach(function(team, index) {
+                    var teamCard = document.createElement('div');
+                    teamCard.className = 'team-card';
+                    teamCard.innerHTML = 
+                        '<input type="text" placeholder="Team Name" value="' + (team.name || '') + '" ' +
+                               'onchange="updateTeam(' + team.id + ', \'name\', this.value)">' +
+                        '<select onchange="updateTeam(' + team.id + ', \'ageGroup\', this.value)">' +
+                            '<option value="10U"' + (team.ageGroup === '10U' ? ' selected' : '') + '>10U</option>' +
+                            '<option value="12U"' + (team.ageGroup === '12U' ? ' selected' : '') + '>12U</option>' +
+                            '<option value="14U"' + (team.ageGroup === '14U' ? ' selected' : '') + '>14U</option>' +
+                            '<option value="16U"' + (team.ageGroup === '16U' ? ' selected' : '') + '>16U</option>' +
+                            '<option value="17U"' + (team.ageGroup === '17U' ? ' selected' : '') + '>17U</option>' +
+                        '</select>' +
+                        '<input type="text" placeholder="Coach Name" value="' + (team.coach || '') + '" ' +
+                               'onchange="updateTeam(' + team.id + ', \'coach\', this.value)">' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">' +
+                            '<label style="display: flex; align-items: center; gap: 5px;">' +
+                                '<input type="checkbox"' + (team.active ? ' checked' : '') + ' ' +
+                                       'onchange="updateTeam(' + team.id + ', \'active\', this.checked)">' +
+                                'Active' +
+                            '</label>' +
+                            '<button onclick="removeTeam(' + team.id + ')" class="danger-btn" ' +
+                                    'style="padding: 5px 10px; font-size: 12px;">Remove</button>' +
+                        '</div>' +
+                        '<div class="legend-color team-color-' + ((index % 14) + 1) + '" ' +
+                             'style="width: 100%; height: 10px; margin-top: 10px; border-radius: 4px;"></div>';
+                    grid.appendChild(teamCard);
+                });
+                
+                console.log('Team grid rendered with', teams.length, 'teams');
+            } catch (error) {
+                console.error('Error rendering team grid:', error);
+            }
+        }
+        
+        function generateDates() {
+            const startDate = new Date('2026-01-04'); // January 4, 2026 (Sunday)
+            const endDate = new Date('2026-04-19'); // April 19, 2026 (Saturday)
+            
+            // Generate Sunday dates
+            sundayDates = [];
+            let currentSunday = new Date(startDate);
+            
+            while (currentSunday <= endDate) {
+                sundayDates.push(new Date(currentSunday));
+                currentSunday.setDate(currentSunday.getDate() + 7);
+            }
+            
+            // Generate weeknight dates (default to Wednesday)
+            generateWeeknightDates();
+            
+            document.getElementById('total-weeks').textContent = sundayDates.length;
+        }
+        
+        function generateWeeknightDates() {
+            const selectedDay = document.getElementById('weeknight-day').value;
+            const dayOffset = {
+                'tuesday': 2,
+                'wednesday': 3,
+                'thursday': 4
+            };
+            
+            weeknightDates = [];
+            sundayDates.forEach(sunday => {
+                const weeknight = new Date(sunday);
+                weeknight.setDate(sunday.getDate() + dayOffset[selectedDay]);
+                if (weeknight <= new Date('2026-04-19')) {
+                    weeknightDates.push(weeknight);
+                }
+            });
+        }
+        
+        function loadDefaultTeams() {
+            teams = [
+                { id: 1, name: '10U Lightning', ageGroup: '10U', coach: 'Coach Johnson', active: true },
+                { id: 2, name: '10U Thunder', ageGroup: '10U', coach: 'Coach Smith', active: true },
+                { id: 3, name: '12U Storm', ageGroup: '12U', coach: 'Coach Davis', active: true },
+                { id: 4, name: '12U Blaze', ageGroup: '12U', coach: 'Coach Wilson', active: true },
+                { id: 5, name: '12U Fury', ageGroup: '12U', coach: 'Coach Brown', active: true },
+                { id: 6, name: '14U Elite', ageGroup: '14U', coach: 'Coach Taylor', active: true },
+                { id: 7, name: '14U Power', ageGroup: '14U', coach: 'Coach Garcia', active: true },
+                { id: 8, name: '14U Impact', ageGroup: '14U', coach: 'Coach Martinez', active: true },
+                { id: 9, name: '16U Voltage', ageGroup: '16U', coach: 'Coach Anderson', active: true },
+                { id: 10, name: '16U Dynasty', ageGroup: '16U', coach: 'Coach Thomas', active: true },
+                { id: 11, name: '17U Titans', ageGroup: '17U', coach: 'Coach Jackson', active: true },
+                { id: 12, name: '17U Phoenix', ageGroup: '17U', coach: 'Coach White', active: true }
+            ];
+            
+            renderTeamGrid();
+            updateActiveTeamsCount();
+        }
+        
+        function renderTeamGrid() {
+            try {
+                const grid = document.getElementById('team-grid');
+                if (!grid) {
+                    console.error('Team grid element not found');
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                
+                teams.forEach((team, index) => {
+                    const teamCard = document.createElement('div');
+                    teamCard.className = 'team-card';
+                    teamCard.innerHTML = `
+                        <input type="text" placeholder="Team Name" value="${team.name || ''}" 
+                               onchange="updateTeam(${team.id}, 'name', this.value)">
+                        <select onchange="updateTeam(${team.id}, 'ageGroup', this.value)">
+                            <option value="10U" ${team.ageGroup === '10U' ? 'selected' : ''}>10U</option>
+                            <option value="12U" ${team.ageGroup === '12U' ? 'selected' : ''}>12U</option>
+                            <option value="14U" ${team.ageGroup === '14U' ? 'selected' : ''}>14U</option>
+                            <option value="16U" ${team.ageGroup === '16U' ? 'selected' : ''}>16U</option>
+                            <option value="17U" ${team.ageGroup === '17U' ? 'selected' : ''}>17U</option>
+                        </select>
+                        <input type="text" placeholder="Coach Name" value="${team.coach || ''}" 
+                               onchange="updateTeam(${team.id}, 'coach', this.value)">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" ${team.active ? 'checked' : ''} 
+                                       onchange="updateTeam(${team.id}, 'active', this.checked)">
+                                Active
+                            </label>
+                            <button onclick="removeTeam(${team.id})" class="danger-btn" 
+                                    style="padding: 5px 10px; font-size: 12px;">Remove</button>
+                        </div>
+                        <div class="legend-color team-color-${(index % 14) + 1}" 
+                             style="width: 100%; height: 10px; margin-top: 10px; border-radius: 4px;"></div>
+                    `;
+                    grid.appendChild(teamCard);
+                });
+                
+                console.log('Team grid rendered with', teams.length, 'teams');
+            } catch (error) {
+                console.error('Error rendering team grid:', error);
+            }
+        }
+        
+        // Call init when page loads - MULTIPLE METHODS TO ENSURE IT WORKS
+        console.log('Script starting to load...');
+        
+        if (document.readyState === 'loading') {
+            console.log('Document still loading, adding DOMContentLoaded listener');
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            console.log('Document already loaded, initializing immediately');
+            initializeApp();
+        }
+        
+        window.addEventListener('load', function() {
+            console.log('Window load event fired');
+            if (typeof teams === 'undefined' || teams.length === 0) {
+                console.log('Teams not initialized, running backup initialization');
+                initializeApp();
+            }
+        });
+        
+        // IMMEDIATE TEST - This should show up right away
+        console.log('=== VOLLEYBALL SCHEDULE SCRIPT LOADED ===');
+        console.log('Current document ready state:', document.readyState);
+        
+        // Initialize everything
+        function initializeApp() {
+            console.log('=== INITIALIZE APP STARTING ===');
+            
+            // Test if basic elements exist
+            var teamGrid = document.getElementById('team-grid');
+            var addBtn = document.getElementById('add-team-btn');
+            
+            console.log('Team grid element found:', !!teamGrid);
+            console.log('Add team button found:', !!addBtn);
+            
+            if (!teamGrid || !addBtn) {
+                console.error('Critical elements not found! Retrying in 1 second...');
+                setTimeout(initializeApp, 1000);
+                return;
+            }
+            
+            // Initialize data
+            try {
+                init();
+                console.log('init() completed successfully');
+            } catch (error) {
+                console.error('Error in init():', error);
+            }
+            
+            // Add event listeners to all buttons
+            try {
+                setupEventListeners();
+                console.log('setupEventListeners() completed successfully');
+            } catch (error) {
+                console.error('Error in setupEventListeners():', error);
+            }
+            
+            console.log('=== INITIALIZE APP COMPLETED ===');
+        }
+        
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            // Team management buttons
+            var addTeamBtn = document.getElementById('add-team-btn');
+            if (addTeamBtn) {
+                addTeamBtn.addEventListener('click', function() {
+                    console.log('Add team button clicked!');
+                    addTeam();
+                });
+                console.log('✓ Add team button listener added');
+            } else {
+                console.error('✗ Add team button not found');
+            }
+            
+            var loadDefaultBtn = document.getElementById('load-default-btn');
+            if (loadDefaultBtn) {
+                loadDefaultBtn.addEventListener('click', function() {
+                    console.log('Load default teams button clicked!');
+                    loadDefaultTeams();
+                });
+                console.log('✓ Load default teams button listener added');
+            } else {
+                console.error('✗ Load default teams button not found');
+            }
+            
+            // Control buttons
+            var generateBtn = document.getElementById('generate-schedule-btn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function() {
+                    console.log('Generate schedule button clicked!');
+                    generateSchedule();
+                });
+                console.log('✓ Generate schedule button listener added');
+            }
+            
+            var autoAssignBtn = document.getElementById('auto-assign-btn');
+            if (autoAssignBtn) {
+                autoAssignBtn.addEventListener('click', function() {
+                    console.log('Auto assign button clicked!');
+                    autoAssignPractices();
+                });
+                console.log('✓ Auto assign button listener added');
+            }
+            
+            var exportBtn = document.getElementById('export-schedule-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    console.log('Export button clicked!');
+                    exportSchedule();
+                });
+                console.log('✓ Export button listener added');
+            }
+            
+            var clearBtn = document.getElementById('clear-schedule-btn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    console.log('Clear schedule button clicked!');
+                    clearSchedule();
+                });
+                console.log('✓ Clear schedule button listener added');
+            }
+            
+            // Tab buttons
+            var sundayTab = document.getElementById('sunday-tab');
+            if (sundayTab) {
+                sundayTab.addEventListener('click', function() { 
+                    console.log('Sunday tab clicked!');
+                    showTab('sunday-schedule'); 
+                });
+                console.log('✓ Sunday tab listener added');
+            }
+            
+            var weeknightTab = document.getElementById('weeknight-tab');
+            if (weeknightTab) {
+                weeknightTab.addEventListener('click', function() { 
+                    console.log('Weeknight tab clicked!');
+                    showTab('weeknight-schedule'); 
+                });
+                console.log('✓ Weeknight tab listener added');
+            }
+            
+            var calendarTab = document.getElementById('calendar-tab');
+            if (calendarTab) {
+                calendarTab.addEventListener('click', function() { 
+                    console.log('Calendar tab clicked!');
+                    showTab('calendar-view'); 
+                });
+                console.log('✓ Calendar tab listener added');
+            }
+            
+            var summaryTab = document.getElementById('summary-tab');
+            if (summaryTab) {
+                summaryTab.addEventListener('click', function() { 
+                    console.log('Summary tab clicked!');
+                    showTab('team-summary'); 
+                });
+                console.log('✓ Summary tab listener added');
+            }
+            
+            // Modal buttons
+            var closeModalBtn = document.getElementById('close-modal');
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closePracticeModal);
+                console.log('✓ Close modal button listener added');
+            }
+            
+            var cancelModalBtn = document.getElementById('cancel-modal-btn');
+            if (cancelModalBtn) {
+                cancelModalBtn.addEventListener('click', closePracticeModal);
+                console.log('✓ Cancel modal button listener added');
+            }
+            
+            var savePracticeBtn = document.getElementById('save-practice-btn');
+            if (savePracticeBtn) {
+                savePracticeBtn.addEventListener('click', savePracticeAssignment);
+                console.log('✓ Save practice button listener added');
+            }
+            
+            var removePracticeBtn = document.getElementById('remove-practice-btn');
+            if (removePracticeBtn) {
+                removePracticeBtn.addEventListener('click', removePracticeAssignment);
+                console.log('✓ Remove practice button listener added');
+            }
+            
+            // Other event listeners
+            var courtsInput = document.getElementById('courts-input');
+            if (courtsInput) {
+                courtsInput.addEventListener('change', updateCourtsInfo);
+                console.log('✓ Courts input listener added');
+            }
+            
+            var weeknightSelect = document.getElementById('weeknight-day');
+            if (weeknightSelect) {
+                weeknightSelect.addEventListener('change', generateSchedule);
+                console.log('✓ Weeknight select listener added');
+            }
+            
+            var calendarSelect = document.getElementById('calendar-month');
+            if (calendarSelect) {
+                calendarSelect.addEventListener('change', generateCalendarView);
+                console.log('✓ Calendar select listener added');
+            }
+            
+            console.log('Event listeners setup complete!');
+        }
+        
+        function addTeam() {
+            const newId = Math.max(...teams.map(t => t.id), 0) + 1;
+            teams.push({
+                id: newId,
+                name: `Team ${newId}`,
+                ageGroup: '14U',
+                coach: 'Coach Name',
+                active: true
+            });
+            renderTeamGrid();
+            updateActiveTeamsCount();
+        }
+        
+        function removeTeam(teamId) {
+            if (confirm('Are you sure you want to remove this team?')) {
+                teams = teams.filter(t => t.id !== teamId);
+                // Remove any practice assignments for this team
+                Object.keys(practiceAssignments).forEach(key => {
+                    if (practiceAssignments[key].teamId === teamId) {
+                        delete practiceAssignments[key];
+                    }
+                });
+                renderTeamGrid();
+                updateActiveTeamsCount();
+                generateSchedule();
+            }
+        }
+        
+        function updateTeam(teamId, field, value) {
+            const team = teams.find(t => t.id === teamId);
+            if (team) {
+                team[field] = value;
+                updateActiveTeamsCount();
+            }
+        }
+        
+        function updateActiveTeamsCount() {
+            const activeCount = teams.filter(t => t.active).length;
+            document.getElementById('active-teams').textContent = activeCount;
+        }
+        
+        function updateCourtsInfo() {
+            document.getElementById('courts-available').textContent = 'Main Gym 1-3 + Auxiliary';
+        }
+        
+        function generateSchedule() {
+            generateWeeknightDates();
+            generateSundaySchedule();
+            generateWeeknightSchedule();
+            generateCalendarView();
+            generateTeamSummary();
+        }
+        
+        function generateSundaySchedule() {
+            const table = document.getElementById('sunday-table');
+            const header = document.getElementById('sunday-header');
+            const body = document.getElementById('sunday-body');
+            
+            // Clear existing content
+            header.innerHTML = '';
+            body.innerHTML = '';
+            
+            // Create header
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = '<th>Time Slot</th>';
+            
+            sundayDates.forEach(date => {
+                const th = document.createElement('th');
+                th.className = 'date-header';
+                th.textContent = formatDate(date);
+                headerRow.appendChild(th);
+            });
+            header.appendChild(headerRow);
+            
+            // Create time slot rows
+            sundayTimeSlots.forEach(timeSlot => {
+                const row = document.createElement('tr');
+                
+                // Time slot cell
+                const timeCell = document.createElement('td');
+                timeCell.className = 'time-slot';
+                timeCell.textContent = timeSlot;
+                row.appendChild(timeCell);
+                
+                // Date cells
+                sundayDates.forEach(date => {
+                    const availableCourts = sundayCourtAvailability[timeSlot];
+                    
+                    availableCourts.forEach((courtName, index) => {
+                        const cell = document.createElement('td');
+                        cell.className = 'practice-cell';
+                        
+                        // Add visual indicator for limited availability (Auxiliary only)
+                        if (availableCourts.length === 1) {
+                            cell.style.background = '#ffe6e6';
+                        }
+                        
+                        const key = `sunday-${formatDateKey(date)}-${timeSlot}-${courtName}`;
+                        
